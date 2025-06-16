@@ -19,3 +19,7 @@ def db_test():
 @app.get("/ping")
 def ping():
     return {"response": "pong"}
+
+from app.database import init_db
+
+init_db()
