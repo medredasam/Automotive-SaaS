@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from sqlalchemy import text
 from app.database import SessionLocal
+from app.routes import auth
 
 app = FastAPI()
 
@@ -23,3 +24,5 @@ def ping():
 from app.database import init_db
 
 init_db()
+
+app.include_router(auth.router, prefix="/auth")
