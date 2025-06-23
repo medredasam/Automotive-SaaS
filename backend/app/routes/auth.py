@@ -4,6 +4,10 @@ from app.schemas.user import UserCreate, UserResponse
 from app.models import user as models
 from app.database import SessionLocal
 from app.utils.hash import hash_password
+from fastapi.security import OAuth2PasswordRequestForm
+from app.utils.hash import verify_password
+from app.utils.token import create_access_token
+
 
 # Create router instance
 router = APIRouter()
@@ -41,3 +45,23 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
 
     return db_user
+
+@router.post("/login")
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.username == form_data.username).first()
+
+    if not user:
+        raise HTTPException(status_code=401, detail="Incorrect username")
+
+    if not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Incorrect password")
+
+    access_token = create_access_token({
+        "sub": user.username,
+        "role": user.role.value  # include role for RBAC
+    })
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
