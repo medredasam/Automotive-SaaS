@@ -1,79 +1,101 @@
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/router";
+import { api } from "../lib/api"; // your Axios client
 
 export default function Register() {
+  const router = useRouter();
+
+  // Form state
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [role, setRole] = useState<"client" | "workshop">("client");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Error message
+  const [error, setError] = useState("");
+
+  // Register handler
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null); // reset error
 
-    // Validate empty fields
+    // Validate
     if (!username || !email || !password) {
       setError("Please fill all fields.");
       return;
     }
 
-    // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError("Please enter a valid email address.");
-      return;
-    }
+    setError("");
 
-    // Validate password length
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
-      return;
+    try {
+      await api.post("/auth/register", {
+        username,
+        email,
+        password,
+        role,
+      });
+      router.push("/login"); // redirect on success
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.detail ||
+          "Error during registration. Please try again."
+      );
     }
-
-    // Proceed with registration API call on Day 3
-    console.log({ username, email, password }); // placeholder
   };
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow w-96">
         <h1 className="text-2xl font-bold mb-4 text-center">Register</h1>
-        <form className="flex flex-col space-y-4" onSubmit={handleSubmit}>
+        <form onSubmit={handleRegister} className="flex flex-col space-y-4">
           <input
             className="border p-2 rounded"
             placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
+
           <input
             className="border p-2 rounded"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+
           <input
-            type="password"
             className="border p-2 rounded"
             placeholder="Password"
+            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+
+          <select
+            className="border p-2 rounded"
+            value={role}
+            onChange={(e) => setRole(e.target.value as "client" | "workshop")}
+          >
+            <option value="client">Client</option>
+            <option value="workshop">Workshop</option>
+          </select>
+
+          {error && (
+            <p className="text-center text-red-500 text-sm">{error}</p>
+          )}
+
           <button
             type="submit"
             className="bg-green-600 text-white p-2 rounded hover:bg-green-700"
           >
             Register
           </button>
+          <p className="text-center mt-4">
+            Already have an account?{" "}
+            <a href="/login" className="text-blue-600 underline">
+              Log in
+            </a>
+          </p>
         </form>
-        {error && <p className="text-red-500 text-center mt-2">{error}</p>}
-        <p className="text-center mt-4">
-          Already have an account?{" "}
-          <Link href="/login" className="text-blue-600 underline">
-            Log In
-          </Link>
-        </p>
       </div>
     </main>
   );
 }
-

@@ -1,23 +1,44 @@
 import { useState } from "react";
+import { useRouter } from "next/router";
 import Link from "next/link";
+import { api } from "../lib/api";
 
 export default function Login() {
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null); // reset error
 
-    // Validate
+    // ✅ Validate
     if (!username || !password) {
       setError("Please enter username and password.");
       return;
     }
 
-    // Proceed with login API call on Day 3
-    console.log({ username, password }); // placeholder
+    try {
+      // ✅ Prepare form data
+      const params = new URLSearchParams();
+      params.append("username", username);
+      params.append("password", password);
+
+      // ✅ Call login API
+      const { data } = await api.post("/auth/login", params);
+
+      // ✅ Save JWT to localStorage
+      localStorage.setItem("token", data.access_token);
+
+      // ✅ Redirect to dashboard
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(
+        err.response?.data?.detail ||
+          "Login failed — please check your credentials."
+      );
+    }
   };
 
   return (
@@ -56,4 +77,3 @@ export default function Login() {
     </main>
   );
 }
-

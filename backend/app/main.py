@@ -3,8 +3,28 @@ from sqlalchemy import text
 from app.database import SessionLocal, init_db
 from app.routes import auth, secure
 from fastapi.openapi.utils import get_openapi
+from fastapi.middleware.cors import CORSMiddleware
+
+# Initialize database
+init_db()
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # list of allowed domains
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/")
+def read_root():
+    return {"message": "Backend OK"}
 
 @app.get("/db_test")
 def db_test():
@@ -21,8 +41,7 @@ def db_test():
 def ping():
     return {"response": "pong"}
 
-# Initialize database
-init_db()
+
 
 # Include routers
 app.include_router(auth.router, prefix="/auth")
