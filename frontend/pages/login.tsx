@@ -13,7 +13,6 @@ export default function Login() {
     e.preventDefault();
     setError(null); // reset error
 
-    // ✅ Validate
     if (!username || !password) {
       setError("Please enter username and password.");
       return;
@@ -31,8 +30,22 @@ export default function Login() {
       // ✅ Save JWT to localStorage
       localStorage.setItem("token", data.access_token);
 
-      // ✅ Redirect to dashboard
-      router.push("/dashboard");
+      // ✅ Fetch user role after login
+      const meRes = await api.get("/auth/me", {
+        headers: { Authorization: `Bearer ${data.access_token}` },
+      });
+
+      const role = meRes.data.role;
+      localStorage.setItem("role", role);
+
+      // ✅ Redirect based on role
+      if (role === "client") {
+        router.push("/client-dashboard");
+      } else if (role === "workshop") {
+        router.push("/workshop-dashboard");
+      } else {
+        router.push("/dashboard"); // fallback
+      }
     } catch (err: any) {
       setError(
         err.response?.data?.detail ||
@@ -77,3 +90,4 @@ export default function Login() {
     </main>
   );
 }
+

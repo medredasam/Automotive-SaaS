@@ -7,7 +7,7 @@ from app.utils.hash import hash_password
 from fastapi.security import OAuth2PasswordRequestForm
 from app.utils.hash import verify_password
 from app.utils.token import create_access_token
-
+from app.utils.token import create_access_token, get_current_user 
 
 # Create router instance
 router = APIRouter()
@@ -65,3 +65,6 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         "access_token": access_token,
         "token_type": "bearer"
     }
+@router.get("/me")
+def read_me(payload: dict = Depends(get_current_user)):
+    return {"username": payload.get("sub"), "role": payload.get("role")}
